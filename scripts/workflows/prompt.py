@@ -2,6 +2,7 @@
 
 import json
 from typing import cast
+from pathlib import Path
 from ...src.state.documents import Json
 from ...src.serialization import mapping_value
 
@@ -203,3 +204,68 @@ def require_flat_inputs(prompt: dict[str, Json]) -> None:
             if isinstance(item, dict):
                 msg = f"Use a flat value for {node['class_type']} input {name} on node {node_id}."
                 raise TypeError(msg)
+
+
+def check_flat_prompts() -> None:
+    """Fail on a nested SaveVideo format and accept the shipped Helios API file."""
+    reject_nested_format()
+    require_flat_save_video(shipped_helios_prompt())
+
+
+def reject_nested_format() -> None:
+    """Require the flat-key check to reject a nested format object."""
+    sample: dict[str, Json] = {"4": {"class_type": "SaveVideo", "inputs": {"format": {"codec": "auto"}}}}
+    try:
+        require_flat_inputs(sample)
+    except TypeError:
+        return
+    msg = "Nested SaveVideo format objects must fail the API check."
+    raise ValueError(msg)
+
+
+def shipped_helios_prompt() -> dict[str, Json]:
+    """Read the committed Helios Hello World API prompt."""
+    slug = min(API_WORKFLOW_SLUGS)
+    path = Path(__file__).resolve().parents[2] / "workflows" / "api" / f"{slug}.json"
+    loaded = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(loaded, dict):
+        msg = "The Helios API workflow must be a JSON object."
+        raise TypeError(msg)
+    prompt = loaded.get("prompt")
+    if not isinstance(prompt, dict):
+        msg = "The Helios API workflow must contain a prompt object."
+        raise TypeError(msg)
+    return cast("dict[str, Json]", prompt)
+
+
+def require_flat_save_video(prompt: dict[str, Json]) -> None:
+    """Require SaveVideo format keys in an API prompt to be strings."""
+    require_flat_inputs(prompt)
+    found = False
+    for value in prompt.values():
+        node = mapping_value(value)
+        if str(node.get("class_type")) != "SaveVideo":
+            continue
+        found = True
+        inputs = mapping_value(node["inputs"])
+        format_value = inputs.get("format")
+        codec = inputs.get("format.codec")
+        if not isinstance(format_value, str) or not isinstance(codec, str):
+            msg = "SaveVideo format and format.codec must be flat strings."
+            raise TypeError(msg)
+    if not found:
+        msg = "The Helios API workflow must include SaveVideo."
+        raise ValueError(msg)
+
+
+def remember_api_prompt(
+    generated: dict[Path, str],
+    destination: Path,
+    slug: str,
+    workflow: dict[str, Json],
+    schemas: dict[str, Json],
+) -> None:
+    """Convert one canvas graph and keep the API file for published examples."""
+    document = api_document(workflow, schemas)
+    if slug in API_WORKFLOW_SLUGS:
+        generated[destination / "api" / f"{slug}.json"] = dump_document(document)

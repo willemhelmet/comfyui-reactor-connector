@@ -14,7 +14,7 @@ from .models.helios import SEQUENCE_PROMPTS
 from ...src.serialization import mapping_value
 from ...src.language import translate, language_scope
 from ..nodes.metadata import read_schemas, validate_metadata
-from .prompt import api_document, dump_document, API_WORKFLOW_SLUGS
+from .prompt import API_WORKFLOW_SLUGS, check_flat_prompts, dump_document, remember_api_prompt
 from .example import (
     Example,
     FIRST_STEP_ID,
@@ -264,14 +264,14 @@ def append_prompt_sequence(
 def workflow_texts(
     examples: tuple[Example, ...], schemas: dict[str, Json], native: dict[str, Json], destination: Path
 ) -> dict[Path, str]:
-    """Serialize canvas graphs and the API prompts derived from selected examples."""
+    """Serialize canvas graphs and reject nested SaveVideo objects in API prompts."""
+    check_flat_prompts()
     generated: dict[Path, str] = {}
     merged = schemas | native
     for example in examples:
         workflow = build_workflow(example, schemas, native)
         generated[destination / example.path] = dump_document(workflow)
-        if example.slug in API_WORKFLOW_SLUGS:
-            generated[destination / "api" / example.path] = dump_document(api_document(workflow, merged))
+        remember_api_prompt(generated, destination, example.slug, workflow, merged)
     return generated
 
 

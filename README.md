@@ -106,11 +106,15 @@ Save Video's format control is a DynamicCombo. `/prompt` accepts it as flat
 keys, for example `"format": "auto"` and `"format.codec": "auto"`. A nested
 `format` object fails validation before the run starts. The API file is already
 flat. `mise run comfy:workflows:build` rebuilds it from the canvas graph.
+`mise run comfy:workflows:build -- --check` converts every example that uses
+Save Video. The check fails when a format value is a nested object, and it
+passes when this Helios API file keeps the flat keys.
 
 1. Install this connector on ComfyUI Desktop or a self-hosted ComfyUI. Comfy
    Cloud cannot install this GitHub pack.
 2. Set `REACTOR_API_KEY` in the environment of the ComfyUI server process, then
-   start ComfyUI. That variable overrides a key saved in Reactor settings. See
+   start ComfyUI. A non-empty value overrides a key saved in Reactor settings.
+   An empty or whitespace-only value does not. See
    [keys and access](ADVANCED.md#keys-and-access). On a CPU-only PyTorch
    install, also start ComfyUI with `--cpu`.
 3. From the ComfyUI directory, post the file. Replace the host and port if

@@ -95,7 +95,7 @@ This folder contains 33 editable ComfyUI workflows. Each graph has connected nod
 
 ## Run from the API
 
-The files above open on the canvas. [Helios text-to-video for POST /prompt](api/helios-01-text-to-video.json) is that Hello World as a node-id map. Save Video uses flat keys such as `format` and `format.codec`. Posting steps are in the [setup guide](../README.md#run-hello-world-from-the-api).
+The files above open on the canvas. [Helios text-to-video for POST /prompt](api/helios-01-text-to-video.json) is that Hello World as a node-id map. Save Video uses flat keys such as `format` and `format.codec`. `mise run comfy:workflows:build -- --check` converts every example that uses Save Video. It fails when conversion emits a nested format object, and it passes when the Helios API file stays flat. Posting steps are in the [setup guide](../README.md#run-hello-world-from-the-api).
 
 ## Save, stop, and get help
 

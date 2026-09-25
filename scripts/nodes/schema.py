@@ -6,6 +6,7 @@ import inspect
 from ...config.models import MODEL_IDENTITIES
 from ...src.extension import NODE_REGISTRATIONS
 from .native import describe_schema, native_schemas
+from .widgets import reject_secret_widget_names, widget_identifiers
 
 CATEGORIES = {f"Reactor/{group}" for group in ("Generate", "Edit", "Live", "Worlds", "Plans")}
 
@@ -25,6 +26,7 @@ def main() -> None:
         if not schema.display_name or not schema.description or schema.category not in CATEGORIES:
             msg = f"Declare a display name, description, and Reactor category for {schema.node_id}."
             raise ValueError(msg)
+        reject_secret_widget_names(schema.node_id, widget_identifiers(schema.inputs))
         schemas[schema.node_id] = {"model": model, **describe_schema(schema)}
     sys.stdout.write(json.dumps({"reactor": schemas, "native": native_schemas()}, indent=2) + "\n")
 

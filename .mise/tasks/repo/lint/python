@@ -14,6 +14,7 @@ main() {
   uv run --no-sync ruff check .
   mise run repo:type:python
   uv run --no-sync python -m quality.python.runner
+  uv run --directory "${REPO_ROOT}/.." --project "${REPO_ROOT}" --no-sync python -m "${REPO_ROOT##*/}.scripts.credentials"
   uv run --no-sync lint-imports --cache-dir .artifacts/import-linter
   uv run --no-sync pydoclint --allow-init-docstring true __init__.py __main__.py src config scripts quality
   uv run --no-sync interrogate --fail-under 100 __init__.py __main__.py src config scripts quality
