@@ -9,6 +9,7 @@ and a Reactor account with credits.
 
 - [Install](#install)
 - [Make your first video](#make-your-first-video)
+- [Run Hello World from the API](#run-hello-world-from-the-api)
 - [Choose a workflow](#choose-a-workflow)
 - [Nodes](#nodes)
 - [Find and refresh models](#find-and-refresh-models)
@@ -93,6 +94,38 @@ package changes. Install only runtime requirements into ComfyUI's environment.
 Use ComfyUI's cancel control to stop a run. Closing a workflow tab does not cancel
 it. Change **run number** to request another run with unchanged inputs.
 
+## Run Hello World from the API
+
+The canvas file
+[Helios text-to-video](workflows/helios-01-text-to-video.json) opens in ComfyUI.
+`POST /prompt` needs a map of node ids.
+[Helios text-to-video API workflow](workflows/api/helios-01-text-to-video.json)
+is that map for a 5 second Helios clip, then Save Video.
+
+Save Video's format control is a DynamicCombo. `/prompt` accepts it as flat
+keys, for example `"format": "auto"` and `"format.codec": "auto"`. A nested
+`format` object fails validation before the run starts. The API file is already
+flat. `mise run comfy:workflows:build` rebuilds it from the canvas graph.
+
+1. Install this connector on ComfyUI Desktop or a self-hosted ComfyUI. Comfy
+   Cloud cannot install this GitHub pack.
+2. Set `REACTOR_API_KEY` in the environment of the ComfyUI server process, then
+   start ComfyUI. That variable overrides a key saved in Reactor settings. See
+   [keys and access](ADVANCED.md#keys-and-access). On a CPU-only PyTorch
+   install, also start ComfyUI with `--cpu`.
+3. From the ComfyUI directory, post the file. Replace the host and port if
+   yours differ:
+
+```sh
+curl -sS -X POST http://127.0.0.1:8188/prompt \
+  -H "Content-Type: application/json" \
+  --data-binary @custom_nodes/reactor-inc/workflows/api/helios-01-text-to-video.json
+```
+
+The response includes `prompt_id`. The video is saved under the output folder
+at `video/reactor/helios-01-text-to-video`. This Hello World leaves live
+controls off. Interactive workflows still need the browser that queued them.
+
 ## Choose a workflow
 
 The [workflow index](workflows/README.md) lists all 33 examples and includes
@@ -168,6 +201,9 @@ for how checks work and how to restore a previous list.
 | Templates are missing                        | Confirm the package includes `workflows`; you can also open a JSON file there.                 |
 | Duplicate nodes or menus appear              | Keep one connector folder; move backups outside `custom_nodes`.                                |
 | Private settings are disabled                | Use a local, single-user connection. For remote access, set the server environment key.        |
+| `/prompt` rejects Save Video                 | Post `workflows/api/helios-01-text-to-video.json` with flat `format` and `format.codec` keys.   |
+| CUDA assert on a CPU-only install            | Start ComfyUI with `--cpu`.                                                                     |
+| Reactor nodes are missing on Comfy Cloud     | Cloud cannot install this pack. Use ComfyUI Desktop or a self-hosted server.                    |
 
 For rejected inputs, timeouts, or session errors, read [recovery](ADVANCED.md#recovery)
 and the node's native **Info** before another run. [Advanced settings](ADVANCED.md)

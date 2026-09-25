@@ -1,5 +1,6 @@
 """List every built workflow so new examples cannot disappear from the index."""
 
+from pathlib import Path
 from .example import Example
 from ...src.models import MODELS
 from .definitions import EXAMPLES
@@ -68,6 +69,17 @@ def sample_rows(sample_prefix: str) -> list[str]:
     return rows
 
 
+def api_section(license_path: str) -> list[str]:
+    """Point from the canvas index to the postable Helios prompt."""
+    readme = Path(license_path).with_name("README.md").as_posix()
+    return [
+        "## " + translate("workflows", "index.apiTitle"),
+        "",
+        translate("workflows", "index.api", setup=readme),
+        "",
+    ]
+
+
 def workflow_index(
     schemas: dict[str, Json],
     *,
@@ -94,6 +106,7 @@ def workflow_index(
             ]
         )
     lines.extend(workflow_rows(schemas, guide_prefix))
+    lines.extend(api_section(license_path))
     for key, heading in (
         ("saveTitle", "## "),
         ("save", ""),

@@ -7,6 +7,7 @@ native **Info** explains its inputs and model-specific limits.
 ## Contents
 
 - [Keys and access](#keys-and-access)
+- [Runtime gotchas](#runtime-gotchas)
 - [Session limits](#session-limits)
 - [Credit rates](#credit-rates)
 - [Model updates](#model-updates)
@@ -26,9 +27,32 @@ clears the entry field and stores the value in the private server state director
 The saved value is never returned to the window or written into a workflow.
 Saving a key does not validate it with Reactor.
 
-`REACTOR_API_KEY` in the ComfyUI server environment takes precedence over a saved
-key. **Clear Saved Key** removes only the saved value. Change an environment key
-where ComfyUI is launched, then restart ComfyUI.
+`REACTOR_API_KEY` in the ComfyUI server process takes precedence over a key
+saved in Reactor settings. New sessions use the environment value whenever the
+variable is set, including when it is empty. **Clear Saved Key** removes only
+the saved file. The settings window reports that the environment key is active
+and does not show the value.
+
+Set the variable in the shell that starts ComfyUI, then start ComfyUI from that
+same shell.
+
+Linux or macOS:
+
+```sh
+export REACTOR_API_KEY="your-reactor-key"
+```
+
+Windows PowerShell:
+
+```powershell
+$env:REACTOR_API_KEY = "your-reactor-key"
+```
+
+Restart ComfyUI after you change the variable. A session that has already
+started keeps the key it started with. Unset `REACTOR_API_KEY` and restart to
+use a saved key again. An empty value still overrides the saved key, and the
+run fails until you remove the variable or assign a key. The key cannot contain
+spaces.
 
 Private settings and live controls require a local, single-user connection.
 Open the ComfyUI window on the computer running its server and connect directly
@@ -47,6 +71,29 @@ The default state locations are:
 be outside the package, ComfyUI source, and configured input, output, temporary,
 and user folders. Files use owner-only permissions where supported. They are
 not encrypted; other code running as the same operating-system user can read them.
+
+## Runtime gotchas
+
+### Comfy Cloud
+
+Comfy Cloud does not install this GitHub pack. Run it in ComfyUI Desktop, a
+manual install, or another self-hosted ComfyUI, and post workflows to that
+server's `/prompt` route.
+
+### CPU-only PyTorch
+
+When the ComfyUI environment's PyTorch build has no CUDA device, start ComfyUI
+with `--cpu`. Without that flag, saving or previewing video can raise a CUDA
+device assert after Reactor has produced frames.
+
+### Save Video in API prompts
+
+`/prompt` accepts Save Video format and codec as flat keys: `format`,
+`format.codec`, and, when you set a codec outside the format choice, `codec`.
+A nested `format` object fails validation because ComfyUI expects the selected
+choice as a string and child controls as dotted keys. The shipped
+[Helios API workflow](workflows/api/helios-01-text-to-video.json) uses the flat
+shape. `mise run comfy:workflows:build` rewrites that file from the canvas graph.
 
 ## Session limits
 

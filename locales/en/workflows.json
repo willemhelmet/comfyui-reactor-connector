@@ -36,6 +36,8 @@
         "title": "Helios: Animate an Image with Live Prompts"
     },
     "index": {
+        "api": "The files above open on the canvas. [Helios text-to-video for POST /prompt](api/helios-01-text-to-video.json) is that Hello World as a node-id map. Save Video uses flat keys such as `format` and `format.codec`. Posting steps are in the [setup guide]({setup}#run-hello-world-from-the-api).",
+        "apiTitle": "Run from the API",
         "animated": "Animated forest",
         "columns": "| Workflow JSON | Input | Guide |",
         "filesTitle": "Available files",

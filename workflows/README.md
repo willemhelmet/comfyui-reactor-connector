@@ -93,6 +93,10 @@ This folder contains 33 editable ComfyUI workflows. Each graph has connected nod
 | [X2: Edit Webcam Video with Pointer Controls](x2-03-webcam.json) | Webcam and live edit prompt | [Node guide](../web/docs/ReactorIncX2Webcam.md) |
 | [X2: Drag and Edit a Video](x2-04-live-prompt.json) | Source video and live controls | [Node guide](../web/docs/ReactorIncX2EditVideo.md) |
 
+## Run from the API
+
+The files above open on the canvas. [Helios text-to-video for POST /prompt](api/helios-01-text-to-video.json) is that Hello World as a node-id map. Save Video uses flat keys such as `format` and `format.codec`. Posting steps are in the [setup guide](../README.md#run-hello-world-from-the-api).
+
 ## Save, stop, and get help
 
 **Save Video** writes to `video/reactor/` under the ComfyUI output folder. Examples with sound also save a separate audio file.
