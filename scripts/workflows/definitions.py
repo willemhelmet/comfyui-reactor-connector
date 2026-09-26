@@ -5,6 +5,7 @@ from .models.x2 import EXAMPLES as X2_EXAMPLES
 from .models.ltx import EXAMPLES as LTX_EXAMPLES
 from .models.fast import EXAMPLES as FAST_EXAMPLES
 from .models.sana import EXAMPLES as SANA_EXAMPLES
+from .models.turbo import EXAMPLES as TURBO_EXAMPLES
 from .models.visko import EXAMPLES as VISKO_EXAMPLES
 from .models.helios import EXAMPLES as HELIOS_EXAMPLES
 from .models.lingbot import EXAMPLES as LINGBOT_EXAMPLES
@@ -17,6 +18,7 @@ from .models.longlive import LIVE_EXAMPLES as LONGLIVE_LIVE_EXAMPLES
 
 BASE_EXAMPLES = (
     *FAST_EXAMPLES,
+    *TURBO_EXAMPLES,
     *HELIOS_EXAMPLES,
     *LINGBOT_EXAMPLES,
     *LONGLIVE_EXAMPLES,

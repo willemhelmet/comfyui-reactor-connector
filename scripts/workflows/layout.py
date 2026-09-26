@@ -14,6 +14,7 @@ from .example import (
     USAGE_NOTE_ID,
     EXTRA_INPUT_ID,
     SECOND_STEP_ID,
+    THIRD_INPUT_ID,
     SOURCE_INPUT_ID,
 )
 
@@ -37,6 +38,7 @@ def model_height(example: Example, model: str) -> int:
     """Reserve prompt space and the controls used by this model."""
     choices = (
         (example.clip_count > 1, 460),
+        (model == "h3-reference-to-video-turbo-realtime", 380),
         (model.startswith("visko"), 470),
         (model == "ltx2", 410),
         (model.startswith("lingbot"), 420),
@@ -49,7 +51,7 @@ def arrange(nodes: list[Json], example: Example, model: str) -> dict[str, Json]:
     """Align columns while keeping each note and node sized for its content."""
     records = [item for item in nodes if isinstance(item, dict)]
     by_id = {item["id"]: item for item in records if isinstance(item["id"], int)}
-    has_inputs = any(number in by_id for number in (SOURCE_INPUT_ID, EXTRA_INPUT_ID, SECOND_STEP_ID))
+    has_inputs = any(number in by_id for number in (SOURCE_INPUT_ID, EXTRA_INPUT_ID, SECOND_STEP_ID, THIRD_INPUT_ID))
     model_x = 40 + INPUT_WIDTH + GAP if has_inputs else 40
     output_x = model_x + MODEL_WIDTH + GAP
     first_width = INPUT_WIDTH if has_inputs else MODEL_WIDTH
@@ -79,10 +81,19 @@ def arrange(nodes: list[Json], example: Example, model: str) -> dict[str, Json]:
             positions[SOURCE_INPUT_ID] = (model_x, top + model_height(example, model) + GAP, MODEL_WIDTH, 310)
     elif ("ending_image" in example.sources) and "image" not in example.sources:
         positions[EXTRA_INPUT_ID] = (40, top, INPUT_WIDTH, 310)
+    place_reference_images(example, positions, top)
     for number, (x, y, width, height) in positions.items():
         if number in by_id:
             by_id[number]["pos"], by_id[number]["size"] = [x, y], [width, height]
     return link_routes(example, positions)
+
+
+def place_reference_images(example: Example, positions: dict[int, tuple[int, int, int, int]], top: int) -> None:
+    """Stack connected reference pictures down the input column."""
+    if "image_1" not in example.sources:
+        return
+    for offset, number in enumerate((SOURCE_INPUT_ID, EXTRA_INPUT_ID, THIRD_INPUT_ID)):
+        positions[number] = (40, top + offset * (310 + GAP), INPUT_WIDTH, 310)
 
 
 def link_routes(example: Example, positions: dict[int, tuple[int, int, int, int]]) -> dict[str, Json]:

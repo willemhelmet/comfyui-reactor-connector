@@ -20,6 +20,15 @@ def setup_steps(example: Example, model: str) -> list[str]:
         for source, key, title in sources
         if source in example.sources
     )
+    steps.extend(
+        translate(
+            "workflows",
+            "setup.referencePicture",
+            title=translate("workflows", f"nodes.picture{number}"),
+        )
+        for number in range(1, 7)
+        if f"image_{number}" in example.sources
+    )
     prompt_titles: dict[str, str] = {}
     if example.plan == "shots":
         prompt_key = "setup.shots"
@@ -74,6 +83,8 @@ def model_notes(example: Example, model: str) -> list[str]:
         notes.append(translate("workflows", "limits.totalDuration", seconds=example.duration_seconds))
     if model == "fast-h3":
         notes.append(translate("workflows", "limits.fast"))
+    if model == "h3-reference-to-video-turbo-realtime":
+        notes.append(translate("workflows", "limits.turbo"))
     if model == "ltx2":
         notes.append(translate("workflows", "limits.ltx"))
     if "source" in example.sources and example.mode != "record":

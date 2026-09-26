@@ -3,6 +3,7 @@
 from .generation.session import MAX_PROMPT_CHARACTERS
 from .generation.video import MAX_EDIT_PROMPT_CHARACTERS
 from .generation.fast import MAX_PROMPT_CHARACTERS as MAX_FAST_PROMPT_CHARACTERS
+from .generation.turbo import MAX_PROMPT_CHARACTERS as MAX_TURBO_PROMPT_CHARACTERS
 from .generation.world import LINGBOT_CAMERA_AXES, LINGBOT_WORLD_CAMERA_AXES, MAX_WORLD_PROMPT_CHARACTERS
 
 MODEL_IDENTITIES = {
@@ -11,6 +12,19 @@ MODEL_IDENTITIES = {
         "connection_name": "reactor/fast-h3",
         "title": "Fast H3",
         "max_prompt_characters": MAX_FAST_PROMPT_CHARACTERS,
+        "prompt_kind": "scene",
+        "is_empty_prompt_allowed": False,
+        "camera_axes": (),
+        "prompt_command": "set_prompt",
+        "has_audio_prompt": False,
+        "has_pointer": False,
+        "has_prompt_passthrough": False,
+    },
+    "h3-reference-to-video-turbo-realtime": {
+        "guide_slug": "h3-reference-to-video-turbo-realtime",
+        "connection_name": "reactor/h3-reference-to-video-turbo-realtime",
+        "title": "H3 Reference Turbo Realtime",
+        "max_prompt_characters": MAX_TURBO_PROMPT_CHARACTERS,
         "prompt_kind": "scene",
         "is_empty_prompt_allowed": False,
         "camera_axes": (),

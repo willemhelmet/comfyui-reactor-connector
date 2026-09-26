@@ -1,4 +1,4 @@
-"""Validate Fast H3 clip replies and observe one clip's lifecycle."""
+"""Validate queued clip replies and observe one clip's lifecycle."""
 
 from __future__ import annotations
 
@@ -16,22 +16,22 @@ if TYPE_CHECKING:
     from ..events import SessionEvents
 
 
-def read_clip(payload: dict[str, object]) -> FastClip:
+def read_clip(payload: dict[str, object], *, model: str = "Fast H3") -> FastClip:
     """Validate the clip identity, readiness, and agreement between duration and frame count."""
     raw = payload.get("clip")
     if not isinstance(raw, dict):
-        raise ConnectorError(ErrorCode.UNAVAILABLE, translate("main", "errors.clipMissing"))
+        raise ConnectorError(ErrorCode.UNAVAILABLE, translate("main", "errors.clipMissing", model=model))
     clip = cast("dict[str, object]", raw)
     identity, frames, ready = clip.get("clip_id"), clip.get("frames"), clip.get("ready")
-    duration = seconds(clip.get("seconds"))
+    duration = seconds(clip.get("seconds"), model=model)
     if not isinstance(identity, str):
-        raise ConnectorError(ErrorCode.UNAVAILABLE, translate("main", "errors.clipIdentifier"))
+        raise ConnectorError(ErrorCode.UNAVAILABLE, translate("main", "errors.clipIdentifier", model=model))
     try:
         canonical = str(UUID(identity))
     except ValueError:
-        raise ConnectorError(ErrorCode.UNAVAILABLE, translate("main", "errors.clipIdentifier")) from None
+        raise ConnectorError(ErrorCode.UNAVAILABLE, translate("main", "errors.clipIdentifier", model=model)) from None
     if canonical != identity:
-        raise ConnectorError(ErrorCode.UNAVAILABLE, translate("main", "errors.clipIdentifier"))
+        raise ConnectorError(ErrorCode.UNAVAILABLE, translate("main", "errors.clipIdentifier", model=model))
     if (
         type(frames) not in (int, float)
         or not 1 <= cast("float", frames) <= MAX_CLIP_FRAMES
@@ -41,7 +41,7 @@ def read_clip(payload: dict[str, object]) -> FastClip:
     ):
         raise ConnectorError(
             ErrorCode.UNAVAILABLE,
-            translate("main", "errors.clipLength"),
+            translate("main", "errors.clipLength", model=model),
             diagnostic_detail=json.dumps(
                 {
                     "frames_type": type(frames).__name__,
@@ -58,10 +58,11 @@ def read_clip(payload: dict[str, object]) -> FastClip:
 class FastClipEvents:
     """Limit stored clip updates; let the session remove the event handler."""
 
-    def __init__(self, events: SessionEvents, *, limit: int = MAX_QUEUED_CLIPS) -> None:
+    def __init__(self, events: SessionEvents, *, limit: int = MAX_QUEUED_CLIPS, model: str = "Fast H3") -> None:
         """Subscribe to clip updates with a fixed maximum number of stored clips."""
         self.events = events
         self.limit = limit
+        self.model = model
         self.finished_at: dict[str, float] = {}
         self.playback_changed = asyncio.Event()
         self.clips: dict[str, FastClip] = {}
@@ -88,18 +89,20 @@ class FastClipEvents:
     def _record_clip(self, envelope: dict[str, object], kind: str) -> None:
         """Validate a clip update and advance generation or playback signals."""
         if kind in ("clip_failed", "clip_stopped"):
-            raise ConnectorError(ErrorCode.CAPTURE, translate("main", "errors.clipUnfinished"))
-        clip = read_clip(message_payload(envelope, str(kind)))
+            raise ConnectorError(ErrorCode.CAPTURE, translate("main", "errors.clipUnfinished", model=self.model))
+        clip = read_clip(message_payload(envelope, str(kind), model=self.model), model=self.model)
         if len(self.clips) >= self.limit and clip.clip_id not in self.clips:
-            raise ConnectorError(ErrorCode.UNAVAILABLE, translate("main", "errors.clipsUnexpected"))
+            raise ConnectorError(ErrorCode.UNAVAILABLE, translate("main", "errors.clipsUnexpected", model=self.model))
         self.clips[clip.clip_id] = clip
         if kind == "clip_generated":
             self.generated.set()
         else:
-            self.finished_at[clip.clip_id] = seconds(message_payload(envelope, "clip_finished").get("seconds_sent"))
+            finished = message_payload(envelope, "clip_finished", model=self.model)
+            self.finished_at[clip.clip_id] = seconds(finished.get("seconds_sent"), model=self.model)
             self.playback_changed.set()
         if kind == "clip_finished" and clip.clip_id == self.clip_id:
-            self.end_seconds = seconds(message_payload(envelope, "clip_finished").get("seconds_sent"))
+            finished = message_payload(envelope, "clip_finished", model=self.model)
+            self.end_seconds = seconds(finished.get("seconds_sent"), model=self.model)
             self.events.model_timing["finished_clips"] = self.events.model_timing.get("finished_clips", 0) + 1
             self.events.model_timing["last_clip_end_seconds"] = self.end_seconds
             self.finished.set()
@@ -117,7 +120,7 @@ class FastClipEvents:
             if clip.frames != expected.frames or clip.seconds != expected.seconds:
                 raise ConnectorError(
                     ErrorCode.UNAVAILABLE,
-                    translate("main", "errors.clipLengthChanged"),
+                    translate("main", "errors.clipLengthChanged", model=self.model),
                 )
 
     async def wait_finished(self, clip: FastClip) -> float:
@@ -127,22 +130,22 @@ class FastClipEvents:
             await self.playback_changed.wait()
         reported = self.clips.get(clip.clip_id)
         if reported is None or reported.frames != clip.frames:
-            raise ConnectorError(ErrorCode.CAPTURE, translate("main", "errors.acceptedClipChanged"))
+            raise ConnectorError(ErrorCode.CAPTURE, translate("main", "errors.acceptedClipChanged", model=self.model))
         return self.finished_at[clip.clip_id]
 
 
-def message_payload(message: object, kind: str) -> dict[str, object]:
+def message_payload(message: object, kind: str, *, model: str = "Fast H3") -> dict[str, object]:
     """Require a matching message type and an object payload."""
     if isinstance(message, dict):
         envelope = cast("dict[str, object]", message)
         payload = envelope.get("data")
         if envelope.get("type") == kind and isinstance(payload, dict):
             return cast("dict[str, object]", payload)
-    raise ConnectorError(ErrorCode.UNAVAILABLE, translate("main", "errors.clipReply"))
+    raise ConnectorError(ErrorCode.UNAVAILABLE, translate("main", "errors.clipReply", model=model))
 
 
-def seconds(value: object) -> float:
+def seconds(value: object, *, model: str = "Fast H3") -> float:
     """Validate a provider media time before using it to select a recording interval."""
     if type(value) not in (int, float) or not 0 <= cast("float", value) <= MAX_MEDIA_SECONDS:
-        raise ConnectorError(ErrorCode.UNAVAILABLE, translate("main", "errors.clipMediaTime"))
+        raise ConnectorError(ErrorCode.UNAVAILABLE, translate("main", "errors.clipMediaTime", model=model))
     return float(cast("float", value))

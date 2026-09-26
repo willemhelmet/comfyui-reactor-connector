@@ -76,6 +76,11 @@
                 "reason": "ComfyUI invokes these named callbacks for schema discovery or cache invalidation."
             },
             {
+                "path": "src/nodes/turbo.py",
+                "names": ["TurboGenerate.fingerprint_inputs"],
+                "reason": "ComfyUI invokes these named callbacks for schema discovery or cache invalidation."
+            },
+            {
                 "path": "src/nodes/helios/animate.py",
                 "names": ["HeliosAnimate.fingerprint_inputs"],
                 "reason": "ComfyUI invokes these named callbacks for schema discovery or cache invalidation."
