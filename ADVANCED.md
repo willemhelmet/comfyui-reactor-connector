@@ -137,6 +137,7 @@ local prompt-sequence and storyboard builders.
 | Edit a camera feed                       | SANA or X2 webcam workflow                              |
 | Move through an image                    | LingBot or LingBot World 2 workflow with scene controls |
 | Continue several clips                   | Fast H3 continued-scene workflow                        |
+| Guide a clip with reference images       | H3 Reference Turbo workflow                             |
 
 Ordinary Helios, LongLive, Visko, SANA, and X2 generation nodes have a **live controls** switch, off by default. LongLive storyboards keep their prepared shots.
 
@@ -253,6 +254,15 @@ clip's media fragments. The continuation uses credits but is omitted from the
 saved output. Its requested length is the deployment's longest clip, currently
 14.375 seconds. The session ends as soon as the selected recording is ready,
 even if that continuation has not finished. The host session cap still applies.
+
+### H3 Reference Turbo
+
+`reactor/h3-reference-to-video-turbo-realtime` uses the same recording close as
+Fast H3. After the selected clip finishes, the connector queues one continuation
+with `continue_from_clip_id` and plays it so the recording service can finish the
+selected clip. That continuation uses credits and is omitted from the saved
+output. Its requested length is the deployment's longest clip. Reference images
+on the selected clip are not sent again for that continuation.
 
 ### LTX
 

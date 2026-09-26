@@ -95,7 +95,7 @@ it. Change **run number** to request another run with unchanged inputs.
 
 ## Choose a workflow
 
-The [workflow index](workflows/README.md) lists all 33 examples and includes
+The [workflow index](workflows/README.md) lists all 35 examples and includes
 [sample images and video](workflows/README.md#sample-inputs). Open an
 example from native **Browse Templates → reactor-inc**, or drag a JSON file onto
 ComfyUI. Examples need only native ComfyUI nodes and this connector.
@@ -103,17 +103,20 @@ ComfyUI. Examples need only native ComfyUI nodes and this connector.
 Use live workflows for scene prompts, Visko sound prompts, X2 dragging, or SANA
 and X2 webcams. LingBot workflows with scene controls let you move with keys or buttons;
 saved video cannot reopen a world. Fast H3 can continue a chosen number of clips
-in one run. See [live controls](ADVANCED.md#live-controls).
+in one run. H3 Reference Turbo
+(`reactor/h3-reference-to-video-turbo-realtime`) uses up to six ordered reference
+images that guide the whole clip. See [live controls](ADVANCED.md#live-controls).
 
 After updating, open an example in a new tab. Existing graphs keep their saved
 notes, prompts, and layout.
 
 ## Nodes
 
-| Node                                                                                   | Input                                                     | Output                            |
-| -------------------------------------------------------------------------------------- | --------------------------------------------------------- | --------------------------------- |
+| Node                                                                                             | Input                                                     | Output                            |
+| ------------------------------------------------------------------------------------------------ | --------------------------------------------------------- | --------------------------------- |
 | [Fast H3: Generate Video (Reactor)](web/docs/ReactorIncFastGenerate.md)                          | Scene and sound prompt, optional first and last images    | Video with sound, separate audio  |
 | [Fast H3: Continue a Scene (Reactor)](web/docs/ReactorIncFastContinue.md)                        | Clip count, prompts, and optional starting image          | Video with sound, separate audio  |
+| [H3 Reference Turbo: Generate Video (Reactor)](web/docs/ReactorIncH3ReferenceTurboGenerate.md)   | Scene prompt and up to six ordered reference images       | Video with sound, separate audio  |
 | [Helios: Generate Video (Reactor)](web/docs/ReactorIncHeliosGenerate.md)                         | Prompt                                                    | Video without sound               |
 | [Helios: Animate an Image (Reactor)](web/docs/ReactorIncHeliosAnimate.md)                        | One image and a prompt                                    | Video without sound               |
 | [Helios: Add a Prompt (Reactor)](web/docs/ReactorIncHeliosAddPrompt.md)                          | Chunk number, prompt, and optional earlier prompts        | A prompt sequence                 |
@@ -125,7 +128,7 @@ notes, prompts, and layout.
 | [LongLive: Generate Video from a Storyboard (Reactor)](web/docs/ReactorIncLongLiveStoryboard.md) | Opening prompt and scheduled shots                        | Video without sound               |
 | [LTX: Make a Portrait Speak (Reactor)](web/docs/ReactorIncLtxSpeak.md)                           | Portrait, script, and speech pace                         | Video with speech, separate audio |
 | [SANA: Edit Video (Reactor)](web/docs/ReactorIncSanaEditVideo.md)                                | Local video and edit prompt                               | Video without sound               |
-| [SANA: Edit Webcam Video (Reactor)](web/docs/ReactorIncSanaWebcam.md)                                | Camera and live edit prompt                               | Video without sound               |
+| [SANA: Edit Webcam Video (Reactor)](web/docs/ReactorIncSanaWebcam.md)                            | Camera and live edit prompt                               | Video without sound               |
 | [Visko Stable: Generate Video (Reactor)](web/docs/ReactorIncViskoStableGenerate.md)              | Scene prompt, sound controls, and optional image          | Video with sound, separate audio  |
 | [Visko Dynamic: Generate Video (Reactor)](web/docs/ReactorIncViskoDynamicGenerate.md)            | Scene prompt, sound controls, and optional image          | Video with sound, separate audio  |
 | [X2: Edit Video (Reactor)](web/docs/ReactorIncX2EditVideo.md)                                    | Local video, edit prompt, and optional reference image    | Video without sound               |

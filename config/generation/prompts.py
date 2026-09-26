@@ -8,6 +8,7 @@ DEFAULT_PROMPTS = {
     "video": "A red ball rolls across a wooden table.",
     "speech": "A person faces the camera and speaks calmly.",
     "fast": "A small stream flows over smooth stones. Water splashes softly and birds call.",
+    "turbo": "The subject in Picture 1 moves through the place in Picture 2. Leaves rustle softly.",
     "continuation": "Follow a stream through a quiet forest. Water splashes softly.",
     "visko": "A small stream flows over smooth stones in a quiet forest.",
 }

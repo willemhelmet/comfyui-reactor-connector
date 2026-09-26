@@ -1,6 +1,6 @@
 # Reactor Workflows
 
-This folder contains 33 editable ComfyUI workflows. Each graph has connected nodes and setup instructions.
+This folder contains 35 editable ComfyUI workflows. Each graph has connected nodes and setup instructions.
 
 ## Open a workflow
 
@@ -20,6 +20,13 @@ This folder contains 33 editable ComfyUI workflows. Each graph has connected nod
 | [Fast H3: Finish on a Chosen Image](fast-h3-04-ending-frame.json) | Final image and prompt | [Node guide](../web/docs/ReactorIncFastGenerate.md) |
 | [Fast H3: Continue a Scene](fast-h3-05-continue-scene.json) | Prompts for continued clips | [Node guide](../web/docs/ReactorIncFastContinue.md) |
 | [Fast H3: Continue from an Image](fast-h3-06-continue-image.json) | Starting image and continued clips | [Node guide](../web/docs/ReactorIncFastContinue.md) |
+
+### H3 Reference Turbo Realtime
+
+| Workflow JSON | Input | Guide |
+| --- | --- | --- |
+| [H3 Reference Turbo: Generate a Clip with Audio](h3-reference-turbo-01-text-to-video.json) | Scene and sound prompt | [Node guide](../web/docs/ReactorIncH3ReferenceTurboGenerate.md) |
+| [H3 Reference Turbo: Guide a Clip with Reference Images](h3-reference-turbo-02-reference-images.json) | Ordered reference images and a scene prompt | [Node guide](../web/docs/ReactorIncH3ReferenceTurboGenerate.md) |
 
 ### Helios
 
@@ -103,7 +110,7 @@ Select a Reactor node and open native **Info** for inputs, limits, and recovery 
 
 ## Limits
 
-Live workflows stop at the chosen duration. Fast H3 can create a chosen number of consecutive clips.
+Live workflows stop at the chosen duration. Fast H3 can create a chosen number of consecutive clips. H3 Reference Turbo uses ordered reference images for the whole clip.
 
 ## Open an updated example
 

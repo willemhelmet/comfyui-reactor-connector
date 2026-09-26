@@ -17,6 +17,12 @@
     "fast-h3-06-continue-image": {
         "title": "Fast H3: Continue from an Image"
     },
+    "h3-reference-turbo-01-text-to-video": {
+        "title": "H3 Reference Turbo: Generate a Clip with Audio"
+    },
+    "h3-reference-turbo-02-reference-images": {
+        "title": "H3 Reference Turbo: Guide a Clip with Reference Images"
+    },
     "helios-01-text-to-video": {
         "title": "Helios: Generate Video"
     },
@@ -55,6 +61,7 @@
             "liveText": "Live prompt",
             "liveVideo": "Source video and live controls",
             "reference": "Video, edit prompt, and reference image",
+            "references": "Ordered reference images and a scene prompt",
             "sequenceImage": "Starting image and scheduled prompts",
             "sequenceText": "Scheduled prompts",
             "shots": "Opening prompt and two scheduled shots",
@@ -67,7 +74,7 @@
         },
         "intro": "This folder contains {count} editable ComfyUI workflows. Each graph has connected nodes and setup instructions.",
         "language": "Only English examples are included. Notes and custom node titles are saved in the graph; changing the interface language does not translate them.",
-        "limits": "Live workflows stop at the chosen duration. Fast H3 can create a chosen number of consecutive clips.",
+        "limits": "Live workflows stop at the chosen duration. Fast H3 can create a chosen number of consecutive clips. H3 Reference Turbo uses ordered reference images for the whole clip.",
         "limitsTitle": "Limits",
         "openSteps": "1. Open an example from native **Browse Templates → reactor-inc**, or open a JSON file listed below.\n2. Read **{start}**. Media inputs start empty; select your own image or video or use the samples below.\n3. Set your key in **Extensions → Reactor → Reactor settings**, then select **Run**.",
         "openTitle": "Open a workflow",
@@ -95,6 +102,7 @@
     "limits": {
         "continuation": "The {clips} clips continue from each previous final frame. Put one prompt per line in **later clip prompts**, starting with clip 2. Leave it empty to repeat the opening prompt.",
         "fast": "Fast H3 rounds each clip to a supported length. Saving starts one extra continuation that uses credits and is excluded from the output.",
+        "turbo": "Reference images guide appearance for the whole clip. Picture 1 is reference image 1. Connect images from reference image 1 upward without skipping a socket. Saving starts one extra continuation that uses credits and is excluded from the output.",
         "helios": "Each Helios chunk contains 33 frames. Connect prompts in order and use increasing **start chunk** values. The opening prompt starts at chunk 0. Later prompts do not extend the recording.",
         "longlive": "Each LongLive chunk is about 1.2 seconds at 24 fps. The soft transition starts near 1.2 seconds; the hard cut near 2.4 seconds. Increase **video duration (seconds)** if you schedule later shots.",
         "ltx": "Use a clear portrait with the whole head visible. Finishing the recording may generate up to 20 extra seconds that use credits and are not saved.",
@@ -147,6 +155,9 @@
         "sourceVideo": "Load Source Video",
         "startingImage": "Load Starting Image",
         "sunlight": "1. Let Sunlight Through",
+        "picture1": "Load Picture 1",
+        "picture2": "Load Picture 2",
+        "picture3": "Load Picture 3",
         "portraitImage": "Load Portrait Image"
     },
     "notes": {
@@ -171,6 +182,7 @@
         "prompt": "Edit **scene prompt** to describe the scene or change you want.",
         "record": "Select **Run** to create and save the video.",
         "reference": "Upload the subject to insert in **{title}**.",
+        "referencePicture": "Upload a reference image in **{title}**.",
         "sequence": "Edit the opening prompt, **{first}**, and **{second}**.",
         "shots": "Edit the opening prompt, **{first}**, and **{second}**.",
         "speech": "Edit **spoken words**. Keep the speech short enough for five seconds.",

@@ -24,6 +24,8 @@ USAGE_NOTE_ID = 8
 
 FIRST_STEP_ID = 5
 
+THIRD_INPUT_ID = 9
+
 
 @dataclass(frozen=True, slots=True)
 class Example:

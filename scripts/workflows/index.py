@@ -25,6 +25,7 @@ def input_summary(example: Example, schema: Json) -> str:
         (model == "ltx2", "speech"),
         (example.plan == "shots", "shots"),
         (example.plan == "prompts", "sequenceImage" if has_image else "sequenceText"),
+        ("image_1" in example.sources, "references"),
         ("source" in example.sources, "reference" if "reference_image" in example.sources else "video"),
         (has_image and "ending_image" in example.sources, "firstLast"),
         ("ending_image" in example.sources, "last"),

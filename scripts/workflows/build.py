@@ -13,6 +13,7 @@ from ...src.state.documents import Json
 from .models.longlive import SHOT_PROMPTS
 from .models.helios import SEQUENCE_PROMPTS
 from ...src.serialization import mapping_value
+from .references import append_reference_images
 from ...src.language import translate, language_scope
 from ..nodes.metadata import read_schemas, validate_metadata
 from .example import (
@@ -71,6 +72,8 @@ def build_workflow(example: Example, schemas: dict[str, Json], native: dict[str,
         append_starting_image(nodes, links, generation, native)
     if "ending_image" in example.sources:
         append_ending_image(example, nodes, links, generation, native)
+    if any(source.startswith("image_") for source in example.sources):
+        append_reference_images(example, nodes, links, generation, native)
     if "source" in example.sources:
         append_source_video(example, nodes, links, generation, native)
     if example.plan == "shots":
@@ -82,7 +85,9 @@ def build_workflow(example: Example, schemas: dict[str, Json], native: dict[str,
     validate_node_sockets(nodes, schemas | native)
     extra = arrange(nodes, example, model)
     return {
-        "last_node_id": 9,
+        "last_node_id": max(
+            9, *(node["id"] for node in nodes if isinstance(node, dict) and isinstance(node["id"], int))
+        ),
         "last_link_id": len(links),
         "nodes": nodes,
         "links": links,

@@ -3,6 +3,7 @@
 import asyncio
 from .nodes.ltx.speak import LtxSpeak
 from .nodes.x2.webcam import X2Webcam
+from .nodes.turbo import TurboGenerate
 from .nodes.x2.edit import X2EditVideo
 from .runtime import initialize_runtime
 from .nodes.sana.webcam import SanaWebcam
@@ -29,6 +30,7 @@ NODE_REGISTRATIONS: dict[type[io.ComfyNode], str] = {
     X2Webcam: "x2",
     FastGenerate: "fast-h3",
     FastContinue: "fast-h3",
+    TurboGenerate: "h3-reference-to-video-turbo-realtime",
     LtxSpeak: "ltx2",
     HeliosGenerate: "helios",
     HeliosAnimate: "helios",
