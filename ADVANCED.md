@@ -358,6 +358,9 @@ Run `mise run repo:setup` to install the pinned tools and dependencies and enabl
 Git hooks. Bun manages frontend dependencies; uv manages Python dependencies.
 Development tools use the repository environment, separate from ComfyUI.
 
+The [engineering walkthrough](docs/engineering-unlock.md) traces how a ComfyUI
+node becomes a Reactor session, using Fast H3 image-to-video as the example.
+
 Development scripts run as modules of the checkout package through mise.
 Quality tools run from the repository root. ComfyUI starts media workers through
 the root launcher in isolated Python processes; those workers use only the media
