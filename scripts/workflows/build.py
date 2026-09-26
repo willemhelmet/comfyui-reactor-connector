@@ -2,7 +2,6 @@
 
 import os
 import sys
-import json
 import argparse
 from pathlib import Path
 from .layout import arrange
@@ -16,6 +15,7 @@ from ...src.serialization import mapping_value
 from .references import append_reference_images
 from ...src.language import translate, language_scope
 from ..nodes.metadata import read_schemas, validate_metadata
+from .prompt import API_WORKFLOW_SLUGS, check_flat_prompts, dump_document, remember_api_prompt
 from .example import (
     Example,
     FIRST_STEP_ID,
@@ -266,6 +266,20 @@ def append_prompt_sequence(
     nodes.extend([first, second])
 
 
+def workflow_texts(
+    examples: tuple[Example, ...], schemas: dict[str, Json], native: dict[str, Json], destination: Path
+) -> dict[Path, str]:
+    """Serialize canvas graphs and reject nested SaveVideo objects in API prompts."""
+    check_flat_prompts()
+    generated: dict[Path, str] = {}
+    merged = schemas | native
+    for example in examples:
+        workflow = build_workflow(example, schemas, native)
+        generated[destination / example.path] = dump_document(workflow)
+        remember_api_prompt(generated, destination, example.slug, workflow, merged)
+    return generated
+
+
 def arguments() -> argparse.Namespace:
     """Read build options without changing files or importing the host."""
     parser = argparse.ArgumentParser(description=__doc__)
@@ -296,15 +310,11 @@ def main() -> int:
     if any((example.plan == "prompts") for example in EXAMPLES):
         covered.add("ReactorIncHeliosAddPrompt")
     issues.extend(f"Add a workflow for {name}." for name in sorted(set(schemas) - covered))
-    expected = {example.path for example in EXAMPLES}
+    expected = {example.path for example in EXAMPLES} | {
+        f"api/{example.path}" for example in EXAMPLES if example.slug in API_WORKFLOW_SLUGS
+    }
     with language_scope(args.language):
-        generated = {
-            destination / example.path: json.dumps(
-                build_workflow(example, schemas, native), indent=2, ensure_ascii=False
-            )
-            + "\n"
-            for example in EXAMPLES
-        }
+        generated = workflow_texts(EXAMPLES, schemas, native, destination)
         generated[destination / "README.md"] = workflow_index(
             schemas,
             guide_prefix=Path(os.path.relpath(root / "web/docs", destination)).as_posix(),

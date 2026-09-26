@@ -7,6 +7,7 @@ native **Info** explains its inputs and model-specific limits.
 ## Contents
 
 - [Keys and access](#keys-and-access)
+- [Runtime gotchas](#runtime-gotchas)
 - [Session limits](#session-limits)
 - [Credit rates](#credit-rates)
 - [Model updates](#model-updates)
@@ -24,11 +25,36 @@ native **Info** explains its inputs and model-specific limits.
 Open **ComfyUI menu → Extensions → Reactor → Reactor settings**. Saving a key
 clears the entry field and stores the value in the private server state directory.
 The saved value is never returned to the window or written into a workflow.
-Saving a key does not validate it with Reactor.
+Saving a key does not validate it with Reactor. Do not add the key as a node
+widget. Workflow JSON would store it. See [schema rules](#schema-rules).
 
-`REACTOR_API_KEY` in the ComfyUI server environment takes precedence over a saved
-key. **Clear Saved Key** removes only the saved value. Change an environment key
-where ComfyUI is launched, then restart ComfyUI.
+`REACTOR_API_KEY` in the ComfyUI server process takes precedence over a key
+saved in Reactor settings when the variable has a non-empty value. An empty or
+whitespace-only value is treated as unset, so the saved key still works.
+**Clear Saved Key** removes only the saved file. When a non-empty environment
+key is active, the settings window reports that and does not show the value.
+
+Set the variable in the shell that starts ComfyUI, then start ComfyUI from that
+same shell.
+
+Linux or macOS:
+
+```sh
+export REACTOR_API_KEY="your-reactor-key"
+```
+
+Windows PowerShell:
+
+```powershell
+$env:REACTOR_API_KEY = "your-reactor-key"
+```
+
+Restart ComfyUI after you change the variable. A session that has already
+started keeps the key it started with. Unset `REACTOR_API_KEY`, or set it to
+an empty value, and restart to use a saved key again. A non-empty value
+overrides the saved key. The key cannot contain spaces. A value that contains
+spaces still overrides the saved key and the run fails until you remove the
+variable or assign a key without spaces.
 
 Private settings and live controls require a local, single-user connection.
 Open the ComfyUI window on the computer running its server and connect directly
@@ -47,6 +73,32 @@ The default state locations are:
 be outside the package, ComfyUI source, and configured input, output, temporary,
 and user folders. Files use owner-only permissions where supported. They are
 not encrypted; other code running as the same operating-system user can read them.
+
+## Runtime gotchas
+
+### Comfy Cloud
+
+Comfy Cloud does not install this GitHub pack. Run it in ComfyUI Desktop, a
+manual install, or another self-hosted ComfyUI, and post workflows to that
+server's `/prompt` route.
+
+### CPU-only PyTorch
+
+When the ComfyUI environment's PyTorch build has no CUDA device, start ComfyUI
+with `--cpu`. Without that flag, saving or previewing video can raise a CUDA
+device assert after Reactor has produced frames.
+
+### Save Video in API prompts
+
+`/prompt` accepts Save Video format and codec as flat keys: `format`,
+`format.codec`, and, when you set a codec outside the format choice, `codec`.
+A nested `format` object fails validation because ComfyUI expects the selected
+choice as a string and child controls as dotted keys. The shipped
+[Helios API workflow](workflows/api/helios-01-text-to-video.json) uses the flat
+shape. `mise run comfy:workflows:build` rewrites that file from the canvas graph.
+`mise run comfy:workflows:build -- --check` converts every example that uses
+Save Video, fails when conversion emits a nested format object, and passes when
+the shipped Helios file keeps those flat keys.
 
 ## Session limits
 
@@ -276,7 +328,7 @@ Read the error and the node's native **Info** before trying again. Pausing a vid
 
 | Problem                      | Next step                                                                                        |
 | ---------------------------- | ------------------------------------------------------------------------------------------------ |
-| Missing or rejected key      | Check Reactor settings and any server environment key, which takes precedence.                   |
+| Missing or rejected key      | Check Reactor settings and any non-empty server environment key, which takes precedence.        |
 | Rejected input               | Check the node's prompt, image, video, duration, and size limits.                                |
 | Another session is active    | Let it finish. Wait for confirmed cleanup before another run.                                    |
 | Video did not arrive in time | Check [Reactor status](https://status.reactor.inc/) and the session limit before retrying.       |
@@ -434,6 +486,15 @@ The workflow builder writes flat JSON files under `workflows/`, the
 directory ComfyUI's native Templates browser reads. The same files appear in
 native **Browse Templates → reactor-inc** from a checkout and from an installed
 package. Rebuild examples before packaging.
+
+### Schema rules
+
+API keys never appear as node widgets. A widget value is saved in the workflow
+JSON. Store keys only in Reactor settings, or in a non-empty `REACTOR_API_KEY`
+on the ComfyUI server. Widget ids must not be `api_key`, `token`, `password`,
+or `secret`, including names built from those words, such as `user_token` or
+`api-key`. Schema export rejects a Reactor node that adds one. That export runs
+inside `mise run comfy:workflows:build` and `mise run comfy:models:validate`.
 
 Python checks use actual ComfyUI and dependency types. Where an upstream API lacks
 complete annotations, the code defines only the interface it consumes. Check

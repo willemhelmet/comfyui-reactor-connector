@@ -20,10 +20,20 @@ def parse_credential(value: str) -> Credential:
     return Credential(value)
 
 
+def server_key() -> str | None:
+    """Return a non-blank server key, treating empty or whitespace-only text as unset."""
+    value = os.environ.get("REACTOR_API_KEY")
+    # A blank variable must not hide the key saved in Reactor settings.
+    if value is None or not value.strip():
+        return None
+    return value
+
+
 def read_credential(directory: Path) -> Credential:
-    """Prefer the server environment over private saved credentials."""
-    if "REACTOR_API_KEY" in os.environ:
-        return parse_credential(os.environ["REACTOR_API_KEY"])
+    """Prefer a non-empty server key over private saved credentials."""
+    value = server_key()
+    if value is not None:
+        return parse_credential(value)
     path = directory / "credential"
     if path.exists():
         try:
@@ -41,7 +51,7 @@ def read_credential(directory: Path) -> Credential:
 
 def credential_source(directory: Path) -> str:
     """Report presence and source without reading or returning the secret."""
-    if "REACTOR_API_KEY" in os.environ:
+    if server_key() is not None:
         return "environment"
     return "saved" if (directory / "credential").is_file() else "missing"
 
@@ -51,4 +61,4 @@ def save_credential(directory: Path, credential: Credential) -> None:
     atomic_write(directory / "credential", credential.reveal().encode("utf-8"))
 
 
-__all__ = ["credential_source", "parse_credential", "read_credential", "save_credential"]
+__all__ = ["credential_source", "parse_credential", "read_credential", "save_credential", "server_key"]

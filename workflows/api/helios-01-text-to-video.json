@@ -1,0 +1,27 @@
+{
+  "prompt": {
+    "3": {
+      "class_type": "ReactorIncHeliosGenerate",
+      "inputs": {
+        "prompt": "A red ball rolls slowly across a wooden table. The camera stays still.",
+        "duration_seconds": 5.0,
+        "seed": 42,
+        "variation": 0,
+        "interactive": false
+      }
+    },
+    "4": {
+      "class_type": "SaveVideo",
+      "inputs": {
+        "video": [
+          "3",
+          0
+        ],
+        "filename_prefix": "video/reactor/helios-01-text-to-video",
+        "format": "auto",
+        "format.codec": "auto"
+      }
+    }
+  },
+  "client_id": "helios-hello-world"
+}
