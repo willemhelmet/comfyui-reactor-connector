@@ -1,7 +1,7 @@
 [project]
-name = "reactor-inc"
+name = "reactor"
 version = "0.1.0"
-description = "Reactor video and world-model nodes for ComfyUI."
+description = "Reactor video and world-model nodes for ComfyUI. Models run on hosted APIs, with no weight downloads."
 readme = "README.md"
 license = "MIT"
 license-files = [ "LICENSE.md" ]
@@ -18,7 +18,7 @@ dependencies = [
   "reactor-sdk>=1.4,<1.5",
   "yarl>=1.20,<2",
 ]
-urls.Repository = "https://github.com/stefanionescu/comfyui-reactor-connector"
+urls.Repository = "https://github.com/willemhelmet/comfyui-reactor-connector"
 
 [dependency-groups]
 dev = [
@@ -196,6 +196,7 @@ host-dependencies.pillow = ">=11,<13"
 host-dependencies.torch = ">=2.6,<3"
 
 [tool.comfy]
+PublisherId = "reactor"
 DisplayName = "Reactor"
 requires-comfyui = ">=0.34.6"
 
