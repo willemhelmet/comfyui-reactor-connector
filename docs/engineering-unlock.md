@@ -10,6 +10,7 @@ Setup, keys, and node inputs stay in the [setup guide](../README.md), the
 
 ## Contents
 
+- [How this is built](#how-this-is-built)
 - [The unlock](#the-unlock)
 - [What you need before a run](#what-you-need-before-a-run)
 - [How ComfyUI loads the nodes](#how-comfyui-loads-the-nodes)
@@ -21,6 +22,60 @@ Setup, keys, and node inputs stay in the [setup guide](../README.md), the
 - [What Reactor provides and what this pack provides](#what-reactor-provides-and-what-this-pack-provides)
 - [Limits](#limits)
 - [Modules](#modules)
+
+## How this is built
+
+Yes. These are custom ComfyUI nodes, and they are written in this repository as
+Python classes. Fast H3's box on the canvas is the class `FastGenerate` in
+`src/nodes/fast/generate.py`. It subclasses `comfy_api.latest.io.ComfyNode`.
+
+ComfyUI loads the install folder `custom_nodes/reactor-inc` and calls
+`comfy_entrypoint()` in `__init__.py`. That returns `ReactorExtension`.
+`get_node_list()` hands Comfy the classes listed in `NODE_REGISTRATIONS` in
+`src/extension.py`. Each class was written here. There are 18 of them.
+
+Two different schemas show up, and they are not the same object.
+
+The schema Comfy sees is `FastGenerate.define_schema()`. The connector defines it. It names
+the node `ReactorIncFastGenerate`, lists the widgets (prompt, duration, seed,
+run number, aspect ratio, optional images), and lists the sockets (`video`,
+`audio`, `recording details`). Comfy draws that form and, on Run, calls
+`FastGenerate.execute` with those widget values. That schema stays inside
+ComfyUI. It is not posted to Reactor. `execute` drops run number, PNG-encodes
+any connected image, and calls `generate_video`.
+
+The Reactor command schema is the model's own command list (`enqueue`, `play`,
+`set_canvas`, and the rest). Fast H3 does not download it. The author copied
+the commands this node needs into `FastGenerateOperation` in
+`src/execution/fast/generate.py` and sends that subset through
+`transport.send_command`. SANA and X2 are the exception: after the session is
+open they call `transport.request_schema()`, read `paths` /
+`/events/{command}` / `operationId`, and continue only when the commands they
+already implement are present. They still do not turn the whole live schema
+into canvas widgets.
+
+Reactor is reached only after Run, and only in three steps. Placing the node
+on the graph does not open a connection.
+
+1. This repository calls Reactor itself. `mint_session_token` in
+   `src/execution/authentication.py` sends `POST https://api.reactor.inc/tokens`
+   with header `Reactor-API-Key`. Reactor returns a JWT scoped to
+   `reactor/fast-h3`.
+2. This repository gives that JWT to the installed library `reactor-sdk`.
+   `SessionTransport.connect` in `src/execution/transport.py` does
+   `Reactor(model_name="reactor/fast-h3", jwt=...).connect()`, then
+   `send_command("enqueue", ...)` and `send_command("play", ...)`. The socket
+   after the token belongs to `reactor-sdk`. This repo chooses the command
+   names and the JSON fields.
+3. This repository calls Reactor again for the file. `download_recording` in
+   `src/media/recording/download.py` GETs the session playlist from
+   `https://api.reactor.inc` with `Authorization: Bearer` and the JWT.
+   `node_output` wraps the saved MP4 as a Comfy `VIDEO`. Save Video is
+   ComfyUI's own node. It reads that socket. This pack does not implement it.
+
+A fourth call, `GET https://api.reactor.inc/pricing`, runs only when someone
+refreshes the model list. It does not generate video and it does not use the
+API key.
 
 ## The unlock
 
