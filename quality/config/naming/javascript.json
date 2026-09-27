@@ -103,6 +103,7 @@
                 "duration_seconds",
                 "elapsed_seconds",
                 "model_title",
+                "node_id",
                 "preview_sequence",
                 "prompt_kind",
                 "prompt_limit",

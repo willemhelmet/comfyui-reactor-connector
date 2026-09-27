@@ -10,6 +10,12 @@ import { promptSection, sessionHeader } from '#web/live/layout.ts';
 import { releaseText, message, setTextAttribute, setText } from '#web/localization.ts';
 import { type SceneInvitation, parseSceneInvitation, type LiveStatus } from '#web/live/schema.ts';
 
+import {
+  closeCanvasPreview,
+  openCanvasPreview,
+  paintSessionPreview,
+} from '#web/live/canvas-preview.ts';
+
 const panels = new Set<string>();
 
 /** Own the camera controls and live preview for a LingBot session. */
@@ -181,10 +187,8 @@ class ScenePanel {
         seconds: Math.round(result.elapsedSeconds * 10) / 10,
       }),
     );
-    if (result.preview) {
-      this.image.src = `data:image/jpeg;base64,${result.preview}`;
-      this.image.hidden = false;
-    }
+    if (result.preview.length > 0)
+      paintSessionPreview(this.owner.lease, this.image, result.preview);
     this.displayProgress(result);
   }
 
@@ -302,6 +306,7 @@ class ScenePanel {
     this.controller.abort();
     if (!this.finished)
       void endSession(this.fetcher, this.owner, this.sequence++, this.previewSequence);
+    closeCanvasPreview(this.owner.lease);
     this.image.removeAttribute('src');
     for (const root of [
       this.dialog,
@@ -325,6 +330,7 @@ class ScenePanel {
 
   /** Show the panel, focus camera input, and begin exchanging session status. */
   show(): void {
+    openCanvasPreview(this.owner.lease, this.owner.nodeId);
     document.body.append(this.dialog);
     this.dialog.showModal();
     this.surface.focus();

@@ -406,6 +406,22 @@
   display: none;
 }
 
+.reactor-canvas-preview {
+  --comfy-widget-min-height: 180px;
+
+  width: 100%;
+  min-height: 180px;
+  overflow: hidden;
+  background: #111;
+  color: #fff;
+  pointer-events: none;
+}
+.reactor-canvas-preview img {
+  display: block;
+  width: 100%;
+  max-height: 240px;
+  object-fit: contain;
+}
 .reactor-preview:has(img[src]) p {
   display: none;
 }
