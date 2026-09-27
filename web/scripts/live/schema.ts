@@ -9,6 +9,7 @@ const invitationEntries = {
   duration_seconds: v.pipe(v.number(), v.finite(), v.gtValue(0)),
   prompt_kind: v.picklist(['scene', 'edit']),
   allow_empty_prompt: v.boolean(),
+  node_id: v.pipe(v.string(), v.minLength(1), v.maxLength(browserLimits.maxTextCharacters)),
 } as const;
 
 const invitationSchema = v.object(invitationEntries);
@@ -22,6 +23,7 @@ function buildInvitation(document: InvitationDocument, axes: Record<string, stri
     promptKind: document.prompt_kind,
     durationSeconds: document.duration_seconds,
     allowEmptyPrompt: document.allow_empty_prompt,
+    nodeId: document.node_id,
     axes,
   };
 }

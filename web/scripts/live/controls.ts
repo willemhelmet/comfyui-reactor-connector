@@ -16,6 +16,11 @@ import {
   parseControlsInvitation,
 } from '#web/live/schema.ts';
 import {
+  closeCanvasPreview,
+  openCanvasPreview,
+  paintSessionPreview,
+} from '#web/live/canvas-preview.ts';
+import {
   type Message,
   releaseText,
   message,
@@ -221,10 +226,7 @@ class ControlPanel {
     this.sound?.setReady(this.ready);
     if (this.ready && !wasReady) setText(this.status, message('controls.recording'));
     this.update.disabled = !this.ready || this.pendingPrompt !== undefined;
-    if (reply.preview) {
-      this.image.src = `data:image/jpeg;base64,${reply.preview}`;
-      this.image.hidden = false;
-    }
+    if (reply.preview.length > 0) paintSessionPreview(this.owner.lease, this.image, reply.preview);
     this.previewSequence = reply.previewSequence;
   }
 
@@ -403,6 +405,7 @@ class ControlPanel {
     this.abort.abort();
     if (!this.finished)
       void endSession(this.fetcher, this.owner, this.sequence++, this.previewSequence);
+    closeCanvasPreview(this.owner.lease);
     this.image.removeAttribute('src');
     for (const root of [
       this.dialog,
@@ -427,6 +430,7 @@ class ControlPanel {
 
   /** Show the session panel and begin the local status exchange. */
   show(): void {
+    openCanvasPreview(this.owner.lease, this.owner.nodeId);
     document.body.append(this.dialog);
     this.dialog.showModal();
     (this.camera?.enable ?? this.start).focus();

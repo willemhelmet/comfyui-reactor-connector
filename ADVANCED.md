@@ -176,6 +176,11 @@ Choose a recording duration before running. The live panel belongs to the
 ComfyUI window that started the workflow. Leaving it open does not extend the
 session. Find the examples in the [workflow index](workflows/README.md).
 
+While the session runs, the latest JPEG preview is also shown on the workflow
+node. You can watch that stream on the node. The panel remains the place to
+enable the camera, start the session, and apply a prompt. Closing the panel
+still ends the session and removes the preview from the node.
+
 Noninteractive generation can run through the ComfyUI API without a browser.
 Interactive and webcam modes require the browser that submitted the workflow; a
 bare API client cannot supply their controls. A browser is not required for the
@@ -328,7 +333,7 @@ Read the error and the node's native **Info** before trying again. Pausing a vid
 
 | Problem                      | Next step                                                                                        |
 | ---------------------------- | ------------------------------------------------------------------------------------------------ |
-| Missing or rejected key      | Check Reactor settings and any non-empty server environment key, which takes precedence.        |
+| Missing or rejected key      | Check Reactor settings and any non-empty server environment key, which takes precedence.         |
 | Rejected input               | Check the node's prompt, image, video, duration, and size limits.                                |
 | Another session is active    | Let it finish. Wait for confirmed cleanup before another run.                                    |
 | Video did not arrive in time | Check [Reactor status](https://status.reactor.inc/) and the session limit before retrying.       |

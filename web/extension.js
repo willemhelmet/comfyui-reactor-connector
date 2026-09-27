@@ -1,6 +1,6 @@
 // web/scripts/extension.ts
 import { api as api3 } from "../../scripts/api.js";
-import { app as app2 } from "../../scripts/app.js";
+import { app as app3 } from "../../scripts/app.js";
 
 // web/scripts/http.ts
 import { api as api2 } from "../../scripts/api.js";
@@ -50,7 +50,7 @@ var main_default = {
       title: "{model}: Live Controls (Reactor)"
     },
     errors: {
-      acceptedClipChanged: "Fast H3 changed a clip's accepted length.",
+      acceptedClipChanged: "{model} changed a clip's accepted length.",
       acceptedSequenceLimit: "The accepted clip lengths exceed the video duration limit. Choose fewer clips.",
       accessRefused: "Reactor refused access. Check your key and model access.",
       anchorInterval: "Choose source refresh interval (chunks) from 0 to 1,000.",
@@ -83,16 +83,16 @@ var main_default = {
       clipCount: "Choose 2 to 8 clips.",
       clipDurationRange: "The requested length is outside this deployment's clip limits.",
       clipDurationUnsupported: "This deployment does not support the requested clip length.",
-      clipIdentifier: "Fast H3 returned an invalid clip ID.",
-      clipLength: "Fast H3 returned an invalid clip length.",
-      clipLengthChanged: "Fast H3 changed the accepted clip length before playback.",
-      clipMediaTime: "Fast H3 returned an invalid media time.",
-      clipMissing: "Fast H3 did not return a clip.",
+      clipIdentifier: "{model} returned an invalid clip ID.",
+      clipLength: "{model} returned an invalid clip length.",
+      clipLengthChanged: "{model} changed the accepted clip length before playback.",
+      clipMediaTime: "{model} returned an invalid media time.",
+      clipMissing: "{model} did not return a clip.",
       clipPlaybackOrder: "Fast H3 started playback before the clip was selected.",
-      clipReply: "Fast H3 returned an unexpected reply.",
-      clipUnfinished: "Fast H3 did not finish the queued clip.",
+      clipReply: "{model} returned an unexpected reply.",
+      clipUnfinished: "{model} did not finish the queued clip.",
       clipWindowMissing: "Fast H3 did not report a precise clip window. No partial clip will be saved.",
-      clipsUnexpected: "Fast H3 returned unexpected clips.",
+      clipsUnexpected: "{model} returned unexpected clips.",
       commandRejected: "Reactor rejected a model command. Check this node's inputs and model guide.",
       continuationLength: "Fast H3 returned an invalid continuation length.",
       continuationPrompts: "Use at most 800 characters per prompt and one later prompt per remaining clip.",
@@ -256,6 +256,17 @@ var main_default = {
       storyboardSize: "Keep the storyboard within 128 KB.",
       terminationUnconfirmed: "Session termination is unconfirmed. Wait for its server limit before retrying.",
       terminationWait: "An earlier Reactor session has unconfirmed termination. Wait {seconds} seconds before starting another run.",
+      turboAspectRatio: "Choose an offered H3 Reference Turbo aspect ratio.",
+      turboAudioMissing: "This H3 Reference Turbo deployment has no audio track.",
+      turboContinuationLength: "H3 Reference Turbo returned an invalid continuation length.",
+      turboDuration: "Choose 5 to 15.084 seconds for H3 Reference Turbo.",
+      turboPlaybackOrder: "H3 Reference Turbo started playback before the clip was selected.",
+      turboPromptLength: "Use at most 8,000 prompt characters.",
+      turboReferenceAspect: "Use a reference image with an aspect ratio from 1:4 to 4:1.",
+      turboReferenceOrder: "Connect reference images from reference image 1 upward without skipping a socket.",
+      turboReferencePixels: "Use a reference image with at most 25 million pixels.",
+      turboReferenceUpload: "Provide a nonempty reference image within 25 MiB and the upload limit in Reactor settings.",
+      turboWindowMissing: "H3 Reference Turbo did not report a precise clip window. No partial clip will be saved.",
       videoArrivalRate: "Video arrived faster than it could be saved. Free CPU and disk capacity by stopping other demanding tasks before trying again.",
       videoEncodingFailed: "Video encoding failed. Check disk space and media support.",
       videoFrameColor: "The video track must provide RGB frames.",
@@ -1856,7 +1867,8 @@ var invitationEntries = {
   model_title: pipe(string(), minLength(1), maxLength(browserLimits.maxTextCharacters)),
   duration_seconds: pipe(number(), finite(), gtValue(0)),
   prompt_kind: picklist(["scene", "edit"]),
-  allow_empty_prompt: boolean()
+  allow_empty_prompt: boolean(),
+  node_id: pipe(string(), minLength(1), maxLength(browserLimits.maxTextCharacters))
 };
 var invitationSchema = object(invitationEntries);
 function buildInvitation(document2, axes) {
@@ -1867,6 +1879,7 @@ function buildInvitation(document2, axes) {
     promptKind: document2.prompt_kind,
     durationSeconds: document2.duration_seconds,
     allowEmptyPrompt: document2.allow_empty_prompt,
+    nodeId: document2.node_id,
     axes
   };
 }
@@ -2175,6 +2188,134 @@ function sessionHeader(title, duration, status, elapsed) {
   return header;
 }
 
+// web/scripts/canvas-node.ts
+import { app as app2 } from "../../scripts/app.js";
+function findCanvasNode(nodeId) {
+  if (!app2.isGraphReady) return null;
+  const graph = app2.rootGraph;
+  const direct = graph.getNodeById(nodeId);
+  if (direct) return direct;
+  if (!/^\d{1,16}$/.test(nodeId)) return null;
+  const numeric = Number(nodeId);
+  if (!Number.isSafeInteger(numeric)) return null;
+  return graph.getNodeById(numeric);
+}
+
+// web/scripts/live/canvas-preview.ts
+var widgetName = "reactorLivePreview";
+var previewMinHeight = 180;
+var previews = /* @__PURE__ */ new Map();
+var CanvasPreview = class {
+  /**
+   * Remember the node widget so the session can remove it later.
+   * @param image - The element that displays JPEG frames.
+   * @param root - The widget element removed with the session.
+   * @param widget - The ComfyUI DOM widget mounted on the node.
+   * @param node - The graph node that owns the widget.
+   * @param previousSize - The node size before the preview grew it.
+   */
+  constructor(image, root, widget, node, previousSize) {
+    this.image = image;
+    this.root = root;
+    this.widget = widget;
+    this.node = node;
+    this.previousSize = previousSize;
+  }
+  image;
+  root;
+  widget;
+  node;
+  previousSize;
+  /** Drop the frame, unregister the widget, and restore the node size. */
+  close() {
+    this.image.removeAttribute("src");
+    releaseText(this.root);
+    this.node.ensureWidgetRemoved(this.widget);
+    this.root.remove();
+    this.node.setSize(this.previousSize);
+    this.node.setDirtyCanvas(true, true);
+  }
+};
+function hasPreviewHost(node) {
+  if (!("addDOMWidget" in node)) return false;
+  return typeof node.addDOMWidget === "function";
+}
+function applyFrame(image, frame) {
+  image.decoding = "async";
+  if (image.src === frame) {
+    image.hidden = false;
+    return;
+  }
+  image.src = frame;
+  image.hidden = false;
+}
+function buildPreviewElement() {
+  const root = element("div");
+  root.className = "reactor-preview reactor-canvas-preview";
+  root.style.setProperty("--comfy-widget-min-height", `${previewMinHeight}px`);
+  root.style.minHeight = `${previewMinHeight}px`;
+  const image = element("img");
+  image.hidden = true;
+  image.decoding = "async";
+  setTextAttribute(image, "alt", message("live.output"));
+  root.append(image, element("p", message("live.waitingVideo")));
+  return { root, image };
+}
+function removeNamedWidget(node) {
+  const stale = node.widgets?.find((widget) => widget.name === widgetName);
+  if (!stale) return;
+  node.ensureWidgetRemoved(stale);
+}
+function releaseNode(node) {
+  const leases = [];
+  for (const [lease, preview] of previews) {
+    if (preview.node === node) leases.push(lease);
+  }
+  for (const lease of leases) closeCanvasPreview(lease);
+  removeNamedWidget(node);
+}
+function mountPreview(node) {
+  releaseNode(node);
+  const view = buildPreviewElement();
+  const [width, height] = node.size;
+  const options = { serialize: false, hideOnZoom: false };
+  try {
+    const widget = node.addDOMWidget(widgetName, "reactorPreview", view.root, options);
+    widget.serialize = false;
+    widget.options.serialize = false;
+    const fitted = node.computeSize();
+    node.setSize([Math.max(width, fitted[0]), Math.max(height, fitted[1])]);
+    node.setDirtyCanvas(true, true);
+    return new CanvasPreview(view.image, view.root, widget, node, [width, height]);
+  } catch {
+    releaseText(view.root);
+    view.root.remove();
+    return void 0;
+  }
+}
+function openCanvasPreview(lease, nodeId) {
+  if (previews.has(lease) || nodeId.length === 0) return;
+  const node = findCanvasNode(nodeId);
+  if (!node || !hasPreviewHost(node)) return;
+  const preview = mountPreview(node);
+  if (!preview) return;
+  previews.set(lease, preview);
+}
+function paintSessionPreview(lease, image, preview) {
+  if (preview.length === 0) return;
+  const frame = `data:image/jpeg;base64,${preview}`;
+  applyFrame(image, frame);
+  const previewOwner = previews.get(lease);
+  if (!previewOwner) return;
+  applyFrame(previewOwner.image, frame);
+}
+function closeCanvasPreview(lease) {
+  const preview = previews.get(lease);
+  if (!preview) return;
+  previews.delete(lease);
+  preview.close();
+}
+
 // web/scripts/live/controls.ts
 var panels = /* @__PURE__ */ new Set();
 var ControlPanel = class {
@@ -2340,10 +2481,7 @@ var ControlPanel = class {
     this.sound?.setReady(this.ready);
     if (this.ready && !wasReady) setText(this.status, message("controls.recording"));
     this.update.disabled = !this.ready || this.pendingPrompt !== void 0;
-    if (reply.preview) {
-      this.image.src = `data:image/jpeg;base64,${reply.preview}`;
-      this.image.hidden = false;
-    }
+    if (reply.preview.length > 0) paintSessionPreview(this.owner.lease, this.image, reply.preview);
     this.previewSequence = reply.previewSequence;
   }
   /**
@@ -2513,6 +2651,7 @@ var ControlPanel = class {
     this.abort.abort();
     if (!this.finished)
       void endSession(this.fetcher, this.owner, this.sequence++, this.previewSequence);
+    closeCanvasPreview(this.owner.lease);
     this.image.removeAttribute("src");
     for (const root of [
       this.dialog,
@@ -2536,6 +2675,7 @@ var ControlPanel = class {
   }
   /** Show the session panel and begin the local status exchange. */
   show() {
+    openCanvasPreview(this.owner.lease, this.owner.nodeId);
     document.body.append(this.dialog);
     this.dialog.showModal();
     (this.camera?.enable ?? this.start).focus();
@@ -3134,10 +3274,8 @@ var ScenePanel = class {
         seconds: Math.round(result.elapsedSeconds * 10) / 10
       })
     );
-    if (result.preview) {
-      this.image.src = `data:image/jpeg;base64,${result.preview}`;
-      this.image.hidden = false;
-    }
+    if (result.preview.length > 0)
+      paintSessionPreview(this.owner.lease, this.image, result.preview);
     this.displayProgress(result);
   }
   /**
@@ -3242,6 +3380,7 @@ var ScenePanel = class {
     this.controller.abort();
     if (!this.finished)
       void endSession(this.fetcher, this.owner, this.sequence++, this.previewSequence);
+    closeCanvasPreview(this.owner.lease);
     this.image.removeAttribute("src");
     for (const root of [
       this.dialog,
@@ -3264,6 +3403,7 @@ var ScenePanel = class {
   }
   /** Show the panel, focus camera input, and begin exchanging session status. */
   show() {
+    openCanvasPreview(this.owner.lease, this.owner.nodeId);
     document.body.append(this.dialog);
     this.dialog.showModal();
     this.surface.focus();
@@ -3693,11 +3833,11 @@ function openSettings(fetcher) {
 }
 
 // web/scripts/extension.ts
-app2.registerExtension({
+app3.registerExtension({
   name: "reactor.inc.configuration",
   init: initializeLanguage,
   setup: () => {
-    app2.ui.settings.addEventListener("Comfy.Locale.change", refreshText);
+    app3.ui.settings.addEventListener("Comfy.Locale.change", refreshText);
     const stylesheet = document.createElement("link");
     stylesheet.rel = "stylesheet";
     stylesheet.href = new URL("./extension.css", import.meta.url).href;
