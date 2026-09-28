@@ -1360,7 +1360,7 @@ wheels = [
 ]
 
 [[package]]
-name = "reactor-inc"
+name = "reactor"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [

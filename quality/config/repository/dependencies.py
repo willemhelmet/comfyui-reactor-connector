@@ -2,7 +2,7 @@
 
 PROJECT_METADATA_FILE = "pyproject.toml"
 LOCK_FILE = "uv.lock"
-PROJECT_PACKAGE_NAME = "reactor-inc"
+PROJECT_PACKAGE_NAME = "reactor"
 RUNTIME_EXTRAS: tuple[str, ...] = ()
 DEV_DEPENDENCY_GROUP = "dev"
 
